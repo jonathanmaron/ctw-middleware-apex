@@ -1,0 +1,1 @@
+{"version":1,"defects":[],"times":{"CtwTest\\Middleware\\ApexMiddleware\\ConfigProviderTest::testConfigProvider":0.001,"CtwTest\\Middleware\\ApexMiddleware\\ApexMiddlewareTest::testApexMiddleware":0.003,"CtwTest\\Middleware\\ApexMiddleware\\ApexMiddlewareTest::testApexMiddlewareWithNoPath":0,"CtwTest\\Middleware\\ApexMiddleware\\ApexMiddlewareTest::testApexMiddlewareWithApex":0}}
