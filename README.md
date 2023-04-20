@@ -1,7 +1,7 @@
-# Package "ctw/ctw-middleware-apex"
+# ctw-middleware-apex
 
-## Installation
+```bash
+$ composer require ctw/ctw-middleware-apex
+```
 
-Install this package using Composer:
-
-`composer require ctw/ctw-middleware-apex`
+Redirect apex domain to www domain. e.g. `example.com` to `www.example.com`.
