@@ -11,27 +11,40 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 class ApexMiddleware extends AbstractApexMiddleware
 {
-    private const PREFIX = 'www.';
-
     private const HEADER = 'Location';
 
     public function process(
         ServerRequestInterface  $request,
         RequestHandlerInterface $handler
-    ): ResponseInterface {
+    ): ResponseInterface{
 
         $response = $handler->handle($request);
 
-        $scheme   = $request->getUri()->getScheme();
-        $host     = $request->getUri()->getHost();
-        $path     = $request->getUri()->getPath();
-        $query    = $request->getUri()->getQuery();
+        $scheme = $request->getUri()->getScheme();
+        $host   = $request->getUri()->getHost();
+        $path   = $request->getUri()->getPath();
+        $query  = $request->getUri()->getQuery();
 
-        if (str_starts_with(strtolower($host), self::PREFIX)) {
+        if (1 === preg_match('/^(www|www-[a-z]{2})\./', strtolower($host))) {
             return $response;
         }
 
-        $location = sprintf('%s://%s%s%s', $scheme, self::PREFIX, $host, $path);
+        // Default prefix "www."
+        $prefix = 'www.';
+
+        // Initials prefix "www-<initials>." (e.g. "www-pl.")
+        $appEnv = (string) getenv('APP_ENV');
+        $appEnv = trim($appEnv);
+        if (strlen($appEnv) > 0) {
+            $separator = '-';
+            if (1 === substr_count($appEnv, $separator)) {
+                $parts    = explode($separator, $appEnv);
+                $initials = array_pop($parts);
+                $prefix   = sprintf('www-%s.', $initials);
+            }
+        }
+
+        $location = sprintf('%s://%s%s%s', $scheme, $prefix, $host, $path);
 
         if (strlen($query) > 0) {
             $location .= sprintf('?%s', $query);
