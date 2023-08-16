@@ -40,7 +40,9 @@ class ApexMiddleware extends AbstractApexMiddleware
             if (1 === substr_count($appEnv, $separator)) {
                 $parts    = explode($separator, $appEnv);
                 $initials = array_pop($parts);
-                $prefix   = sprintf('www-%s.', $initials);
+                if (2 === strlen($initials)) {
+                    $prefix   = sprintf('www-%s.', $initials);
+                }
             }
         }
 
