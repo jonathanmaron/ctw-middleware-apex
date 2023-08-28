@@ -11,21 +11,22 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 class ApexMiddleware extends AbstractApexMiddleware
 {
+    /**
+     * @var string
+     */
     private const HEADER = 'Location';
 
-    public function process(
-        ServerRequestInterface  $request,
-        RequestHandlerInterface $handler
-    ): ResponseInterface{
-
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
+    {
         $response = $handler->handle($request);
+        $uri      = $request->getUri();
 
-        $scheme = $request->getUri()->getScheme();
-        $host   = $request->getUri()->getHost();
-        $path   = $request->getUri()->getPath();
-        $query  = $request->getUri()->getQuery();
+        $scheme = $uri->getScheme();
+        $host   = $uri->getHost();
+        $path   = $uri->getPath();
+        $query  = $uri->getQuery();
 
-        if (1 === preg_match('/^(www|www-[a-z]{2})\./', strtolower($host))) {
+        if (1 === preg_match('#^(www|www-[a-z]{2})\.#', strtolower($host))) {
             return $response;
         }
 
@@ -35,7 +36,7 @@ class ApexMiddleware extends AbstractApexMiddleware
         // Initials prefix "www-<initials>." (e.g. "www-pl.")
         $appEnv = (string) getenv('APP_ENV');
         $appEnv = trim($appEnv);
-        if (strlen($appEnv) > 0) {
+        if ('' != strlen($appEnv)) {
             $separator = '-';
             if (1 === substr_count($appEnv, $separator)) {
                 $parts    = explode($separator, $appEnv);
@@ -48,7 +49,7 @@ class ApexMiddleware extends AbstractApexMiddleware
 
         $location = sprintf('%s://%s%s%s', $scheme, $prefix, $host, $path);
 
-        if (strlen($query) > 0) {
+        if ('' != $query) {
             $location .= sprintf('?%s', $query);
         }
 
