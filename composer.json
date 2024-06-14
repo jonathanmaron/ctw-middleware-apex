@@ -1,4 +1,4 @@
-{  "minimum-stability": "dev",  
+{  "minimum-stability": "dev", "prefer-stable": true,  
     "name": "ctw/ctw-middleware-apex",
     "description": "This PSR-15 middleware redirects with an HTTP 301 (\"Moved Permanently\") Location header an apex domain to www e.g. example.com to www.example.com.",
     "license": "BSD-3-Clause",
