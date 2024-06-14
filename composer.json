@@ -1,4 +1,4 @@
-{  "minimum-stability": "dev", "prefer-stable": true,  
+{
     "name": "ctw/ctw-middleware-apex",
     "description": "This PSR-15 middleware redirects with an HTTP 301 (\"Moved Permanently\") Location header an apex domain to www e.g. example.com to www.example.com.",
     "license": "BSD-3-Clause",
@@ -17,6 +17,8 @@
         "squizlabs/php_codesniffer": "^3.6",
         "symfony/var-dumper": "^7.0"
     },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
     "autoload": {
         "psr-4": {
             "Ctw\\Middleware\\ApexMiddleware\\": "src"
