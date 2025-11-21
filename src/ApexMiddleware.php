@@ -11,10 +11,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 class ApexMiddleware extends AbstractApexMiddleware
 {
-    /**
-     * @var string
-     */
-    private const HEADER = 'Location';
+    private const string HEADER = 'Location';
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
@@ -36,20 +33,19 @@ class ApexMiddleware extends AbstractApexMiddleware
         // Initials prefix "www-<initials>." (e.g. "www-pl.")
         $appEnv = (string) getenv('APP_ENV');
         $appEnv = trim($appEnv);
-        if ('' != strlen($appEnv)) {
-            $separator = '-';
-            if (1 === substr_count($appEnv, $separator)) {
-                $parts    = explode($separator, $appEnv);
-                $initials = array_pop($parts);
-                if (2 === strlen($initials)) {
-                    $prefix = sprintf('www-%s.', $initials);
-                }
+
+        $separator = '-';
+        if (1 === substr_count($appEnv, $separator)) {
+            $parts    = explode($separator, $appEnv);
+            $initials = array_pop($parts);
+            if (2 === strlen($initials)) {
+                $prefix = sprintf('www-%s.', $initials);
             }
         }
 
         $location = sprintf('%s://%s%s%s', $scheme, $prefix, $host, $path);
 
-        if ('' != $query) {
+        if ('' !== $query) {
             $location .= sprintf('?%s', $query);
         }
 
