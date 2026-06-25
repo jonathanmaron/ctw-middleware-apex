@@ -6,7 +6,7 @@
     "require": {
         "php": "^8.3",
         "ctw/ctw-http": "^4.0",
-        "ctw/ctw-middleware": "^4.0",
+        "ctw/ctw-middleware": "dev-php85",
         "psr/container": "^1.0 || ^2.0"
     },
     "require-dev": {
