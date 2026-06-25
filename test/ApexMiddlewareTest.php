@@ -24,10 +24,10 @@ final class ApexMiddlewareTest extends TestCase
         parent::setUp();
 
         $this->middleware = new ApexMiddleware();
-        $this->request = $this->createMock(ServerRequestInterface::class);
-        $this->handler = $this->createMock(RequestHandlerInterface::class);
-        $this->response = $this->createMock(ResponseInterface::class);
-        $this->uri = $this->createMock(UriInterface::class);
+        $this->request = $this->createStub(ServerRequestInterface::class);
+        $this->handler = $this->createStub(RequestHandlerInterface::class);
+        $this->response = $this->createStub(ResponseInterface::class);
+        $this->uri = $this->createStub(UriInterface::class);
 
         // Default setup
         $this->request->method('getUri')->willReturn($this->uri);
@@ -111,7 +111,7 @@ final class ApexMiddlewareTest extends TestCase
         $this->uri->method('getPath')->willReturn('');
         $this->uri->method('getQuery')->willReturn('');
 
-        $newResponse = $this->createMock(ResponseInterface::class);
+        $newResponse = $this->createStub(ResponseInterface::class);
         $newResponse->method('withHeader')->willReturn($newResponse);
 
         $result = $this->middleware->process($this->request, $this->handler);
@@ -520,12 +520,13 @@ final class ApexMiddlewareTest extends TestCase
     {
         $this->uri->method('getHost')->willReturn('www.example.com');
 
-        $this->handler->expects(self::once())
+        $handler = $this->createMock(RequestHandlerInterface::class);
+        $handler->expects(self::once())
             ->method('handle')
             ->with($this->request)
             ->willReturn($this->response);
 
-        $this->middleware->process($this->request, $this->handler);
+        $this->middleware->process($this->request, $handler);
     }
 
     /**

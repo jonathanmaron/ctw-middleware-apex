@@ -18,7 +18,7 @@ final class ApexMiddlewareFactoryTest extends TestCase
     {
         parent::setUp();
         $this->factory = new ApexMiddlewareFactory();
-        $this->container = $this->createMock(ContainerInterface::class);
+        $this->container = $this->createStub(ContainerInterface::class);
     }
 
     /**
@@ -48,10 +48,11 @@ final class ApexMiddlewareFactoryTest extends TestCase
     public function testFactoryCreatesInstanceWithoutContainerDependencies(): void
     {
         // Container should not be called for any services
-        $this->container->expects(self::never())
+        $container = $this->createMock(ContainerInterface::class);
+        $container->expects(self::never())
             ->method('get');
 
-        $middleware = ($this->factory)($this->container);
+        $middleware = ($this->factory)($container);
 
         self::assertInstanceOf(ApexMiddleware::class, $middleware);
     }
@@ -61,7 +62,7 @@ final class ApexMiddlewareFactoryTest extends TestCase
      */
     public function testFactoryWorksWithDifferentContainerImplementations(): void
     {
-        $anotherContainer = $this->createMock(ContainerInterface::class);
+        $anotherContainer = $this->createStub(ContainerInterface::class);
 
         $middleware = ($this->factory)($anotherContainer);
 

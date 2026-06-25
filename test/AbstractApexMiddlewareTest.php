@@ -89,9 +89,9 @@ final class AbstractApexMiddlewareTest extends TestCase
             }
         };
 
-        $request = $this->createMock(ServerRequestInterface::class);
+        $request = $this->createStub(ServerRequestInterface::class);
         $handler = $this->createMock(RequestHandlerInterface::class);
-        $response = $this->createMock(ResponseInterface::class);
+        $response = $this->createStub(ResponseInterface::class);
 
         $handler->expects(self::once())
             ->method('handle')
