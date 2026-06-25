@@ -14,9 +14,13 @@ use Psr\Http\Server\RequestHandlerInterface;
 final class ApexMiddlewareTest extends TestCase
 {
     private ApexMiddleware $middleware;
+
     private ServerRequestInterface $request;
+
     private RequestHandlerInterface $handler;
+
     private ResponseInterface $response;
+
     private UriInterface $uri;
 
     protected function setUp(): void
@@ -30,8 +34,10 @@ final class ApexMiddlewareTest extends TestCase
         $this->uri = $this->createStub(UriInterface::class);
 
         // Default setup
-        $this->request->method('getUri')->willReturn($this->uri);
-        $this->handler->method('handle')->willReturn($this->response);
+        $this->request->method('getUri')
+            ->willReturn($this->uri);
+        $this->handler->method('handle')
+            ->willReturn($this->response);
     }
 
     protected function tearDown(): void
@@ -46,7 +52,8 @@ final class ApexMiddlewareTest extends TestCase
      */
     public function testRequestWithWwwPrefixIsNotRedirected(): void
     {
-        $this->uri->method('getHost')->willReturn('www.example.com');
+        $this->uri->method('getHost')
+            ->willReturn('www.example.com');
 
         $result = $this->middleware->process($this->request, $this->handler);
 
@@ -58,7 +65,8 @@ final class ApexMiddlewareTest extends TestCase
      */
     public function testRequestWithUppercaseWwwPrefixIsNotRedirected(): void
     {
-        $this->uri->method('getHost')->willReturn('WWW.example.com');
+        $this->uri->method('getHost')
+            ->willReturn('WWW.example.com');
 
         $result = $this->middleware->process($this->request, $this->handler);
 
@@ -70,7 +78,8 @@ final class ApexMiddlewareTest extends TestCase
      */
     public function testRequestWithMixedCaseWwwPrefixIsNotRedirected(): void
     {
-        $this->uri->method('getHost')->willReturn('WwW.example.com');
+        $this->uri->method('getHost')
+            ->willReturn('WwW.example.com');
 
         $result = $this->middleware->process($this->request, $this->handler);
 
@@ -82,7 +91,8 @@ final class ApexMiddlewareTest extends TestCase
      */
     public function testRequestWithWwwDashTwoLetterPrefixIsNotRedirected(): void
     {
-        $this->uri->method('getHost')->willReturn('www-pl.example.com');
+        $this->uri->method('getHost')
+            ->willReturn('www-pl.example.com');
 
         $result = $this->middleware->process($this->request, $this->handler);
 
@@ -94,7 +104,8 @@ final class ApexMiddlewareTest extends TestCase
      */
     public function testRequestWithWwwDashEnPrefixIsNotRedirected(): void
     {
-        $this->uri->method('getHost')->willReturn('www-en.example.com');
+        $this->uri->method('getHost')
+            ->willReturn('www-en.example.com');
 
         $result = $this->middleware->process($this->request, $this->handler);
 
@@ -106,13 +117,18 @@ final class ApexMiddlewareTest extends TestCase
      */
     public function testApexDomainIsRedirectedToWwwSubdomain(): void
     {
-        $this->uri->method('getScheme')->willReturn('https');
-        $this->uri->method('getHost')->willReturn('example.com');
-        $this->uri->method('getPath')->willReturn('');
-        $this->uri->method('getQuery')->willReturn('');
+        $this->uri->method('getScheme')
+            ->willReturn('https');
+        $this->uri->method('getHost')
+            ->willReturn('example.com');
+        $this->uri->method('getPath')
+            ->willReturn('');
+        $this->uri->method('getQuery')
+            ->willReturn('');
 
         $newResponse = $this->createStub(ResponseInterface::class);
-        $newResponse->method('withHeader')->willReturn($newResponse);
+        $newResponse->method('withHeader')
+            ->willReturn($newResponse);
 
         $result = $this->middleware->process($this->request, $this->handler);
 
@@ -125,10 +141,14 @@ final class ApexMiddlewareTest extends TestCase
     #[\PHPUnit\Framework\Attributes\DataProvider('apexDomainProvider')]
     public function testRedirectResponseHas301StatusCode(string $host): void
     {
-        $this->uri->method('getScheme')->willReturn('https');
-        $this->uri->method('getHost')->willReturn($host);
-        $this->uri->method('getPath')->willReturn('/');
-        $this->uri->method('getQuery')->willReturn('');
+        $this->uri->method('getScheme')
+            ->willReturn('https');
+        $this->uri->method('getHost')
+            ->willReturn($host);
+        $this->uri->method('getPath')
+            ->willReturn('/');
+        $this->uri->method('getQuery')
+            ->willReturn('');
 
         $result = $this->middleware->process($this->request, $this->handler);
 
@@ -142,12 +162,24 @@ final class ApexMiddlewareTest extends TestCase
     public static function apexDomainProvider(): array
     {
         return [
-            'simple domain' => ['host' => 'example.com'],
-            'subdomain' => ['host' => 'api.example.com'],
-            'deep subdomain' => ['host' => 'api.v1.example.com'],
-            'single word' => ['host' => 'localhost'],
-            'with numbers' => ['host' => 'example123.com'],
-            'with hyphens' => ['host' => 'my-example.com'],
+            'simple domain' => [
+                'host' => 'example.com',
+            ],
+            'subdomain' => [
+                'host' => 'api.example.com',
+            ],
+            'deep subdomain' => [
+                'host' => 'api.v1.example.com',
+            ],
+            'single word' => [
+                'host' => 'localhost',
+            ],
+            'with numbers' => [
+                'host' => 'example123.com',
+            ],
+            'with hyphens' => [
+                'host' => 'my-example.com',
+            ],
         ];
     }
 
@@ -156,10 +188,14 @@ final class ApexMiddlewareTest extends TestCase
      */
     public function testRedirectPreservesHttpsScheme(): void
     {
-        $this->uri->method('getScheme')->willReturn('https');
-        $this->uri->method('getHost')->willReturn('example.com');
-        $this->uri->method('getPath')->willReturn('/test');
-        $this->uri->method('getQuery')->willReturn('');
+        $this->uri->method('getScheme')
+            ->willReturn('https');
+        $this->uri->method('getHost')
+            ->willReturn('example.com');
+        $this->uri->method('getPath')
+            ->willReturn('/test');
+        $this->uri->method('getQuery')
+            ->willReturn('');
 
         $result = $this->middleware->process($this->request, $this->handler);
 
@@ -172,10 +208,14 @@ final class ApexMiddlewareTest extends TestCase
      */
     public function testRedirectPreservesHttpScheme(): void
     {
-        $this->uri->method('getScheme')->willReturn('http');
-        $this->uri->method('getHost')->willReturn('example.com');
-        $this->uri->method('getPath')->willReturn('/test');
-        $this->uri->method('getQuery')->willReturn('');
+        $this->uri->method('getScheme')
+            ->willReturn('http');
+        $this->uri->method('getHost')
+            ->willReturn('example.com');
+        $this->uri->method('getPath')
+            ->willReturn('/test');
+        $this->uri->method('getQuery')
+            ->willReturn('');
 
         $result = $this->middleware->process($this->request, $this->handler);
 
@@ -188,10 +228,14 @@ final class ApexMiddlewareTest extends TestCase
     #[\PHPUnit\Framework\Attributes\DataProvider('pathProvider')]
     public function testRedirectPreservesRequestPath(string $path): void
     {
-        $this->uri->method('getScheme')->willReturn('https');
-        $this->uri->method('getHost')->willReturn('example.com');
-        $this->uri->method('getPath')->willReturn($path);
-        $this->uri->method('getQuery')->willReturn('');
+        $this->uri->method('getScheme')
+            ->willReturn('https');
+        $this->uri->method('getHost')
+            ->willReturn('example.com');
+        $this->uri->method('getPath')
+            ->willReturn($path);
+        $this->uri->method('getQuery')
+            ->willReturn('');
 
         $result = $this->middleware->process($this->request, $this->handler);
 
@@ -204,14 +248,30 @@ final class ApexMiddlewareTest extends TestCase
     public static function pathProvider(): array
     {
         return [
-            'root path' => ['path' => '/'],
-            'simple path' => ['path' => '/about'],
-            'nested path' => ['path' => '/blog/post/123'],
-            'path with extension' => ['path' => '/file.html'],
-            'path with dots' => ['path' => '/path/to/file.json'],
-            'path with hyphens' => ['path' => '/my-custom-page'],
-            'path with underscores' => ['path' => '/my_custom_page'],
-            'empty path' => ['path' => ''],
+            'root path' => [
+                'path' => '/',
+            ],
+            'simple path' => [
+                'path' => '/about',
+            ],
+            'nested path' => [
+                'path' => '/blog/post/123',
+            ],
+            'path with extension' => [
+                'path' => '/file.html',
+            ],
+            'path with dots' => [
+                'path' => '/path/to/file.json',
+            ],
+            'path with hyphens' => [
+                'path' => '/my-custom-page',
+            ],
+            'path with underscores' => [
+                'path' => '/my_custom_page',
+            ],
+            'empty path' => [
+                'path' => '',
+            ],
         ];
     }
 
@@ -221,10 +281,14 @@ final class ApexMiddlewareTest extends TestCase
     #[\PHPUnit\Framework\Attributes\DataProvider('queryStringProvider')]
     public function testRedirectPreservesQueryString(string $query): void
     {
-        $this->uri->method('getScheme')->willReturn('https');
-        $this->uri->method('getHost')->willReturn('example.com');
-        $this->uri->method('getPath')->willReturn('/search');
-        $this->uri->method('getQuery')->willReturn($query);
+        $this->uri->method('getScheme')
+            ->willReturn('https');
+        $this->uri->method('getHost')
+            ->willReturn('example.com');
+        $this->uri->method('getPath')
+            ->willReturn('/search');
+        $this->uri->method('getQuery')
+            ->willReturn($query);
 
         $result = $this->middleware->process($this->request, $this->handler);
 
@@ -237,12 +301,24 @@ final class ApexMiddlewareTest extends TestCase
     public static function queryStringProvider(): array
     {
         return [
-            'single parameter' => ['query' => 'q=test'],
-            'multiple parameters' => ['query' => 'q=test&page=1'],
-            'with special chars' => ['query' => 'q=hello+world&sort=desc'],
-            'with encoded chars' => ['query' => 'q=hello%20world'],
-            'with numbers' => ['query' => 'id=123&count=456'],
-            'with array notation' => ['query' => 'items[]=1&items[]=2'],
+            'single parameter' => [
+                'query' => 'q=test',
+            ],
+            'multiple parameters' => [
+                'query' => 'q=test&page=1',
+            ],
+            'with special chars' => [
+                'query' => 'q=hello+world&sort=desc',
+            ],
+            'with encoded chars' => [
+                'query' => 'q=hello%20world',
+            ],
+            'with numbers' => [
+                'query' => 'id=123&count=456',
+            ],
+            'with array notation' => [
+                'query' => 'items[]=1&items[]=2',
+            ],
         ];
     }
 
@@ -251,10 +327,14 @@ final class ApexMiddlewareTest extends TestCase
      */
     public function testRedirectWithoutQueryStringHasNoQuestionMark(): void
     {
-        $this->uri->method('getScheme')->willReturn('https');
-        $this->uri->method('getHost')->willReturn('example.com');
-        $this->uri->method('getPath')->willReturn('/test');
-        $this->uri->method('getQuery')->willReturn('');
+        $this->uri->method('getScheme')
+            ->willReturn('https');
+        $this->uri->method('getHost')
+            ->willReturn('example.com');
+        $this->uri->method('getPath')
+            ->willReturn('/test');
+        $this->uri->method('getQuery')
+            ->willReturn('');
 
         $result = $this->middleware->process($this->request, $this->handler);
 
@@ -268,10 +348,14 @@ final class ApexMiddlewareTest extends TestCase
     {
         putenv('APP_ENV=staging-pl');
 
-        $this->uri->method('getScheme')->willReturn('https');
-        $this->uri->method('getHost')->willReturn('example.com');
-        $this->uri->method('getPath')->willReturn('/');
-        $this->uri->method('getQuery')->willReturn('');
+        $this->uri->method('getScheme')
+            ->willReturn('https');
+        $this->uri->method('getHost')
+            ->willReturn('example.com');
+        $this->uri->method('getPath')
+            ->willReturn('/');
+        $this->uri->method('getQuery')
+            ->willReturn('');
 
         $result = $this->middleware->process($this->request, $this->handler);
 
@@ -286,10 +370,14 @@ final class ApexMiddlewareTest extends TestCase
     {
         putenv("APP_ENV={$appEnv}");
 
-        $this->uri->method('getScheme')->willReturn('https');
-        $this->uri->method('getHost')->willReturn('example.com');
-        $this->uri->method('getPath')->willReturn('/');
-        $this->uri->method('getQuery')->willReturn('');
+        $this->uri->method('getScheme')
+            ->willReturn('https');
+        $this->uri->method('getHost')
+            ->willReturn('example.com');
+        $this->uri->method('getPath')
+            ->willReturn('/');
+        $this->uri->method('getQuery')
+            ->willReturn('');
 
         $result = $this->middleware->process($this->request, $this->handler);
 
@@ -303,10 +391,22 @@ final class ApexMiddlewareTest extends TestCase
     public static function appEnvTwoLetterProvider(): array
     {
         return [
-            'staging-pl' => ['appEnv' => 'staging-pl', 'expectedInitials' => 'pl'],
-            'staging-en' => ['appEnv' => 'staging-en', 'expectedInitials' => 'en'],
-            'prod-us' => ['appEnv' => 'prod-us', 'expectedInitials' => 'us'],
-            'dev-fr' => ['appEnv' => 'dev-fr', 'expectedInitials' => 'fr'],
+            'staging-pl' => [
+                'appEnv' => 'staging-pl',
+                'expectedInitials' => 'pl',
+            ],
+            'staging-en' => [
+                'appEnv' => 'staging-en',
+                'expectedInitials' => 'en',
+            ],
+            'prod-us' => [
+                'appEnv' => 'prod-us',
+                'expectedInitials' => 'us',
+            ],
+            'dev-fr' => [
+                'appEnv' => 'dev-fr',
+                'expectedInitials' => 'fr',
+            ],
         ];
     }
 
@@ -317,10 +417,14 @@ final class ApexMiddlewareTest extends TestCase
     {
         putenv('APP_ENV=production');
 
-        $this->uri->method('getScheme')->willReturn('https');
-        $this->uri->method('getHost')->willReturn('example.com');
-        $this->uri->method('getPath')->willReturn('/');
-        $this->uri->method('getQuery')->willReturn('');
+        $this->uri->method('getScheme')
+            ->willReturn('https');
+        $this->uri->method('getHost')
+            ->willReturn('example.com');
+        $this->uri->method('getPath')
+            ->willReturn('/');
+        $this->uri->method('getQuery')
+            ->willReturn('');
 
         $result = $this->middleware->process($this->request, $this->handler);
 
@@ -334,10 +438,14 @@ final class ApexMiddlewareTest extends TestCase
     {
         putenv('APP_ENV=staging-dev-pl');
 
-        $this->uri->method('getScheme')->willReturn('https');
-        $this->uri->method('getHost')->willReturn('example.com');
-        $this->uri->method('getPath')->willReturn('/');
-        $this->uri->method('getQuery')->willReturn('');
+        $this->uri->method('getScheme')
+            ->willReturn('https');
+        $this->uri->method('getHost')
+            ->willReturn('example.com');
+        $this->uri->method('getPath')
+            ->willReturn('/');
+        $this->uri->method('getQuery')
+            ->willReturn('');
 
         $result = $this->middleware->process($this->request, $this->handler);
 
@@ -351,10 +459,14 @@ final class ApexMiddlewareTest extends TestCase
     {
         putenv('APP_ENV=staging-p');
 
-        $this->uri->method('getScheme')->willReturn('https');
-        $this->uri->method('getHost')->willReturn('example.com');
-        $this->uri->method('getPath')->willReturn('/');
-        $this->uri->method('getQuery')->willReturn('');
+        $this->uri->method('getScheme')
+            ->willReturn('https');
+        $this->uri->method('getHost')
+            ->willReturn('example.com');
+        $this->uri->method('getPath')
+            ->willReturn('/');
+        $this->uri->method('getQuery')
+            ->willReturn('');
 
         $result = $this->middleware->process($this->request, $this->handler);
 
@@ -368,10 +480,14 @@ final class ApexMiddlewareTest extends TestCase
     {
         putenv('APP_ENV=staging-pol');
 
-        $this->uri->method('getScheme')->willReturn('https');
-        $this->uri->method('getHost')->willReturn('example.com');
-        $this->uri->method('getPath')->willReturn('/');
-        $this->uri->method('getQuery')->willReturn('');
+        $this->uri->method('getScheme')
+            ->willReturn('https');
+        $this->uri->method('getHost')
+            ->willReturn('example.com');
+        $this->uri->method('getPath')
+            ->willReturn('/');
+        $this->uri->method('getQuery')
+            ->willReturn('');
 
         $result = $this->middleware->process($this->request, $this->handler);
 
@@ -385,10 +501,14 @@ final class ApexMiddlewareTest extends TestCase
     {
         putenv('APP_ENV=');
 
-        $this->uri->method('getScheme')->willReturn('https');
-        $this->uri->method('getHost')->willReturn('example.com');
-        $this->uri->method('getPath')->willReturn('/');
-        $this->uri->method('getQuery')->willReturn('');
+        $this->uri->method('getScheme')
+            ->willReturn('https');
+        $this->uri->method('getHost')
+            ->willReturn('example.com');
+        $this->uri->method('getPath')
+            ->willReturn('/');
+        $this->uri->method('getQuery')
+            ->willReturn('');
 
         $result = $this->middleware->process($this->request, $this->handler);
 
@@ -402,10 +522,14 @@ final class ApexMiddlewareTest extends TestCase
     {
         putenv('APP_ENV=  staging-pl  ');
 
-        $this->uri->method('getScheme')->willReturn('https');
-        $this->uri->method('getHost')->willReturn('example.com');
-        $this->uri->method('getPath')->willReturn('/');
-        $this->uri->method('getQuery')->willReturn('');
+        $this->uri->method('getScheme')
+            ->willReturn('https');
+        $this->uri->method('getHost')
+            ->willReturn('example.com');
+        $this->uri->method('getPath')
+            ->willReturn('/');
+        $this->uri->method('getQuery')
+            ->willReturn('');
 
         $result = $this->middleware->process($this->request, $this->handler);
 
@@ -419,10 +543,14 @@ final class ApexMiddlewareTest extends TestCase
     {
         putenv('APP_ENV');  // Unset the variable
 
-        $this->uri->method('getScheme')->willReturn('https');
-        $this->uri->method('getHost')->willReturn('example.com');
-        $this->uri->method('getPath')->willReturn('/');
-        $this->uri->method('getQuery')->willReturn('');
+        $this->uri->method('getScheme')
+            ->willReturn('https');
+        $this->uri->method('getHost')
+            ->willReturn('example.com');
+        $this->uri->method('getPath')
+            ->willReturn('/');
+        $this->uri->method('getQuery')
+            ->willReturn('');
 
         $result = $this->middleware->process($this->request, $this->handler);
 
@@ -434,10 +562,14 @@ final class ApexMiddlewareTest extends TestCase
      */
     public function testWwwDashThreeLetterPrefixGetsRedirected(): void
     {
-        $this->uri->method('getScheme')->willReturn('https');
-        $this->uri->method('getHost')->willReturn('www-abc.example.com');
-        $this->uri->method('getPath')->willReturn('/');
-        $this->uri->method('getQuery')->willReturn('');
+        $this->uri->method('getScheme')
+            ->willReturn('https');
+        $this->uri->method('getHost')
+            ->willReturn('www-abc.example.com');
+        $this->uri->method('getPath')
+            ->willReturn('/');
+        $this->uri->method('getQuery')
+            ->willReturn('');
 
         $result = $this->middleware->process($this->request, $this->handler);
 
@@ -449,10 +581,14 @@ final class ApexMiddlewareTest extends TestCase
      */
     public function testWwwDashOneLetterPrefixGetsRedirected(): void
     {
-        $this->uri->method('getScheme')->willReturn('https');
-        $this->uri->method('getHost')->willReturn('www-a.example.com');
-        $this->uri->method('getPath')->willReturn('/');
-        $this->uri->method('getQuery')->willReturn('');
+        $this->uri->method('getScheme')
+            ->willReturn('https');
+        $this->uri->method('getHost')
+            ->willReturn('www-a.example.com');
+        $this->uri->method('getPath')
+            ->willReturn('/');
+        $this->uri->method('getQuery')
+            ->willReturn('');
 
         $result = $this->middleware->process($this->request, $this->handler);
 
@@ -464,10 +600,14 @@ final class ApexMiddlewareTest extends TestCase
      */
     public function testSubdomainStartingWithWwwButNotMatchingPatternGetsRedirected(): void
     {
-        $this->uri->method('getScheme')->willReturn('https');
-        $this->uri->method('getHost')->willReturn('wwwtest.example.com');
-        $this->uri->method('getPath')->willReturn('/');
-        $this->uri->method('getQuery')->willReturn('');
+        $this->uri->method('getScheme')
+            ->willReturn('https');
+        $this->uri->method('getHost')
+            ->willReturn('wwwtest.example.com');
+        $this->uri->method('getPath')
+            ->willReturn('/');
+        $this->uri->method('getQuery')
+            ->willReturn('');
 
         $result = $this->middleware->process($this->request, $this->handler);
 
@@ -479,10 +619,14 @@ final class ApexMiddlewareTest extends TestCase
      */
     public function testComplexScenarioWithPathAndQueryIsHandledCorrectly(): void
     {
-        $this->uri->method('getScheme')->willReturn('https');
-        $this->uri->method('getHost')->willReturn('example.com');
-        $this->uri->method('getPath')->willReturn('/blog/post/123');
-        $this->uri->method('getQuery')->willReturn('ref=twitter&utm_source=social');
+        $this->uri->method('getScheme')
+            ->willReturn('https');
+        $this->uri->method('getHost')
+            ->willReturn('example.com');
+        $this->uri->method('getPath')
+            ->willReturn('/blog/post/123');
+        $this->uri->method('getQuery')
+            ->willReturn('ref=twitter&utm_source=social');
 
         $result = $this->middleware->process($this->request, $this->handler);
 
@@ -494,7 +638,8 @@ final class ApexMiddlewareTest extends TestCase
      */
     public function testUppercaseWwwDashTwoLetterPrefixIsRecognized(): void
     {
-        $this->uri->method('getHost')->willReturn('WWW-PL.example.com');
+        $this->uri->method('getHost')
+            ->willReturn('WWW-PL.example.com');
 
         $result = $this->middleware->process($this->request, $this->handler);
 
@@ -506,7 +651,8 @@ final class ApexMiddlewareTest extends TestCase
      */
     public function testMixedCaseWwwDashTwoLetterPrefixIsRecognized(): void
     {
-        $this->uri->method('getHost')->willReturn('WwW-Pl.example.com');
+        $this->uri->method('getHost')
+            ->willReturn('WwW-Pl.example.com');
 
         $result = $this->middleware->process($this->request, $this->handler);
 
@@ -518,7 +664,8 @@ final class ApexMiddlewareTest extends TestCase
      */
     public function testMiddlewareProcessesRequestThroughHandler(): void
     {
-        $this->uri->method('getHost')->willReturn('www.example.com');
+        $this->uri->method('getHost')
+            ->willReturn('www.example.com');
 
         $handler = $this->createMock(RequestHandlerInterface::class);
         $handler->expects(self::once())
@@ -534,7 +681,8 @@ final class ApexMiddlewareTest extends TestCase
      */
     public function testResponseIsModifiedOnlyForApexDomains(): void
     {
-        $this->uri->method('getHost')->willReturn('www.example.com');
+        $this->uri->method('getHost')
+            ->willReturn('www.example.com');
 
         $result = $this->middleware->process($this->request, $this->handler);
 
@@ -548,10 +696,14 @@ final class ApexMiddlewareTest extends TestCase
     {
         putenv('APP_ENV=staging-');
 
-        $this->uri->method('getScheme')->willReturn('https');
-        $this->uri->method('getHost')->willReturn('example.com');
-        $this->uri->method('getPath')->willReturn('/');
-        $this->uri->method('getQuery')->willReturn('');
+        $this->uri->method('getScheme')
+            ->willReturn('https');
+        $this->uri->method('getHost')
+            ->willReturn('example.com');
+        $this->uri->method('getPath')
+            ->willReturn('/');
+        $this->uri->method('getQuery')
+            ->willReturn('');
 
         $result = $this->middleware->process($this->request, $this->handler);
 
@@ -565,10 +717,14 @@ final class ApexMiddlewareTest extends TestCase
     {
         putenv('APP_ENV=-pl');
 
-        $this->uri->method('getScheme')->willReturn('https');
-        $this->uri->method('getHost')->willReturn('example.com');
-        $this->uri->method('getPath')->willReturn('/');
-        $this->uri->method('getQuery')->willReturn('');
+        $this->uri->method('getScheme')
+            ->willReturn('https');
+        $this->uri->method('getHost')
+            ->willReturn('example.com');
+        $this->uri->method('getPath')
+            ->willReturn('/');
+        $this->uri->method('getQuery')
+            ->willReturn('');
 
         $result = $this->middleware->process($this->request, $this->handler);
 
@@ -582,10 +738,14 @@ final class ApexMiddlewareTest extends TestCase
     {
         putenv('APP_ENV=-');
 
-        $this->uri->method('getScheme')->willReturn('https');
-        $this->uri->method('getHost')->willReturn('example.com');
-        $this->uri->method('getPath')->willReturn('/');
-        $this->uri->method('getQuery')->willReturn('');
+        $this->uri->method('getScheme')
+            ->willReturn('https');
+        $this->uri->method('getHost')
+            ->willReturn('example.com');
+        $this->uri->method('getPath')
+            ->willReturn('/');
+        $this->uri->method('getQuery')
+            ->willReturn('');
 
         $result = $this->middleware->process($this->request, $this->handler);
 

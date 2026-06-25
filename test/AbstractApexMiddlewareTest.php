@@ -50,9 +50,11 @@ final class AbstractApexMiddlewareTest extends TestCase
      */
     public function testConcreteImplementationCanBeInstantiated(): void
     {
-        $concrete = new class extends AbstractApexMiddleware {
-            public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
-            {
+        $concrete = new class() extends AbstractApexMiddleware {
+            public function process(
+                ServerRequestInterface $request,
+                RequestHandlerInterface $handler
+            ): ResponseInterface {
                 return $handler->handle($request);
             }
         };
@@ -67,9 +69,11 @@ final class AbstractApexMiddlewareTest extends TestCase
      */
     public function testConcreteImplementationHasProcessMethod(): void
     {
-        $concrete = new class extends AbstractApexMiddleware {
-            public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
-            {
+        $concrete = new class() extends AbstractApexMiddleware {
+            public function process(
+                ServerRequestInterface $request,
+                RequestHandlerInterface $handler
+            ): ResponseInterface {
                 return $handler->handle($request);
             }
         };
@@ -82,9 +86,11 @@ final class AbstractApexMiddlewareTest extends TestCase
      */
     public function testConcreteImplementationCanProcessRequests(): void
     {
-        $concrete = new class extends AbstractApexMiddleware {
-            public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
-            {
+        $concrete = new class() extends AbstractApexMiddleware {
+            public function process(
+                ServerRequestInterface $request,
+                RequestHandlerInterface $handler
+            ): ResponseInterface {
                 return $handler->handle($request);
             }
         };
@@ -113,7 +119,8 @@ final class AbstractApexMiddlewareTest extends TestCase
 
         // Filter out inherited methods
         $ownMethods = array_filter($methods, function ($method) {
-            return $method->getDeclaringClass()->getName() === AbstractApexMiddleware::class;
+            return AbstractApexMiddleware::class === $method->getDeclaringClass()
+                ->getName();
         });
 
         self::assertCount(0, $ownMethods);
@@ -129,7 +136,8 @@ final class AbstractApexMiddlewareTest extends TestCase
 
         // Filter out inherited properties
         $ownProperties = array_filter($properties, function ($property) {
-            return $property->getDeclaringClass()->getName() === AbstractApexMiddleware::class;
+            return AbstractApexMiddleware::class === $property->getDeclaringClass()
+                ->getName();
         });
 
         self::assertCount(0, $ownProperties);
@@ -161,16 +169,20 @@ final class AbstractApexMiddlewareTest extends TestCase
      */
     public function testMultipleConcreteImplementationsAreIndependent(): void
     {
-        $concrete1 = new class extends AbstractApexMiddleware {
-            public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
-            {
+        $concrete1 = new class() extends AbstractApexMiddleware {
+            public function process(
+                ServerRequestInterface $request,
+                RequestHandlerInterface $handler
+            ): ResponseInterface {
                 return $handler->handle($request);
             }
         };
 
-        $concrete2 = new class extends AbstractApexMiddleware {
-            public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
-            {
+        $concrete2 = new class() extends AbstractApexMiddleware {
+            public function process(
+                ServerRequestInterface $request,
+                RequestHandlerInterface $handler
+            ): ResponseInterface {
                 return $handler->handle($request);
             }
         };

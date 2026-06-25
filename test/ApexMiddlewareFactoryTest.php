@@ -12,6 +12,7 @@ use Psr\Container\ContainerInterface;
 final class ApexMiddlewareFactoryTest extends TestCase
 {
     private ApexMiddlewareFactory $factory;
+
     private ContainerInterface $container;
 
     protected function setUp(): void
