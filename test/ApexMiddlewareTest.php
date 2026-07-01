@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace CtwTest\Middleware\ApexMiddleware;
 
+use Ctw\Http\HttpStatus;
 use Ctw\Middleware\ApexMiddleware\ApexMiddleware;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -48,198 +50,162 @@ final class ApexMiddlewareTest extends TestCase
     }
 
     /**
-     * Test that requests with www prefix are not redirected
+     * Test that the handler response passes through unchanged when the host already carries the lowercase www prefix.
      */
-    public function testRequestWithWwwPrefixIsNotRedirected(): void
+    public function testRequestWithLowercaseWwwPrefixReturnsHandlerResponseUnchanged(): void
     {
-        $this->uri->method('getHost')
-            ->willReturn('www.example.com');
-
-        $result = $this->middleware->process($this->request, $this->handler);
+        $result = $this->process('https', 'www.example.com', '/', '');
 
         self::assertSame($this->response, $result);
     }
 
     /**
-     * Test that requests with WWW prefix in uppercase are not redirected
+     * Test that the handler response passes through unchanged when the www prefix is uppercase.
      */
-    public function testRequestWithUppercaseWwwPrefixIsNotRedirected(): void
+    public function testRequestWithUppercaseWwwPrefixReturnsHandlerResponseUnchanged(): void
     {
-        $this->uri->method('getHost')
-            ->willReturn('WWW.example.com');
-
-        $result = $this->middleware->process($this->request, $this->handler);
+        $result = $this->process('https', 'WWW.example.com', '/', '');
 
         self::assertSame($this->response, $result);
     }
 
     /**
-     * Test that requests with mixed case WWW prefix are not redirected
+     * Test that the handler response passes through unchanged when the www prefix is mixed case.
      */
-    public function testRequestWithMixedCaseWwwPrefixIsNotRedirected(): void
+    public function testRequestWithMixedCaseWwwPrefixReturnsHandlerResponseUnchanged(): void
     {
-        $this->uri->method('getHost')
-            ->willReturn('WwW.example.com');
-
-        $result = $this->middleware->process($this->request, $this->handler);
+        $result = $this->process('https', 'WwW.example.com', '/', '');
 
         self::assertSame($this->response, $result);
     }
 
     /**
-     * Test that requests with www-xx prefix are not redirected
+     * Test that the handler response passes through unchanged when the host carries a www-pl two-letter prefix.
      */
-    public function testRequestWithWwwDashTwoLetterPrefixIsNotRedirected(): void
+    public function testRequestWithWwwDashTwoLetterPrefixReturnsHandlerResponseUnchanged(): void
     {
-        $this->uri->method('getHost')
-            ->willReturn('www-pl.example.com');
-
-        $result = $this->middleware->process($this->request, $this->handler);
+        $result = $this->process('https', 'www-pl.example.com', '/', '');
 
         self::assertSame($this->response, $result);
     }
 
     /**
-     * Test that requests with www-en prefix are not redirected
+     * Test that the handler response passes through unchanged when the host carries a www-en two-letter prefix.
      */
-    public function testRequestWithWwwDashEnPrefixIsNotRedirected(): void
+    public function testRequestWithWwwDashEnPrefixReturnsHandlerResponseUnchanged(): void
     {
-        $this->uri->method('getHost')
-            ->willReturn('www-en.example.com');
-
-        $result = $this->middleware->process($this->request, $this->handler);
+        $result = $this->process('https', 'www-en.example.com', '/', '');
 
         self::assertSame($this->response, $result);
     }
 
     /**
-     * Test that apex domain is redirected to www subdomain
+     * Test that the handler response passes through unchanged when an uppercase WWW-PL prefix matches the pattern.
      */
-    public function testApexDomainIsRedirectedToWwwSubdomain(): void
+    public function testRequestWithUppercaseWwwDashTwoLetterPrefixReturnsHandlerResponseUnchanged(): void
     {
-        $this->uri->method('getScheme')
-            ->willReturn('https');
-        $this->uri->method('getHost')
-            ->willReturn('example.com');
-        $this->uri->method('getPath')
-            ->willReturn('');
-        $this->uri->method('getQuery')
-            ->willReturn('');
+        $result = $this->process('https', 'WWW-PL.example.com', '/', '');
 
-        $newResponse = $this->createStub(ResponseInterface::class);
-        $newResponse->method('withHeader')
-            ->willReturn($newResponse);
+        self::assertSame($this->response, $result);
+    }
 
-        $result = $this->middleware->process($this->request, $this->handler);
+    /**
+     * Test that the handler response passes through unchanged when a mixed case Www-Pl prefix matches the pattern.
+     */
+    public function testRequestWithMixedCaseWwwDashTwoLetterPrefixReturnsHandlerResponseUnchanged(): void
+    {
+        $result = $this->process('https', 'WwW-Pl.example.com', '/', '');
+
+        self::assertSame($this->response, $result);
+    }
+
+    /**
+     * Test that an apex host is redirected to the www subdomain with an empty path when no path or query is present.
+     */
+    public function testApexHostRedirectsToWwwSubdomainWithoutTrailingSlashWhenPathIsEmpty(): void
+    {
+        $result = $this->process('https', 'example.com', '', '');
 
         self::assertNotSame($this->response, $result);
+        self::assertSame('https://www.example.com', $result->getHeaderLine('Location'));
     }
 
     /**
-     * Test that redirect response has 301 status code
+     * Test that the redirect response carries an HTTP 301 status and www location for every apex-style host.
      */
-    #[\PHPUnit\Framework\Attributes\DataProvider('apexDomainProvider')]
-    public function testRedirectResponseHas301StatusCode(string $host): void
-    {
-        $this->uri->method('getScheme')
-            ->willReturn('https');
-        $this->uri->method('getHost')
-            ->willReturn($host);
-        $this->uri->method('getPath')
-            ->willReturn('/');
-        $this->uri->method('getQuery')
-            ->willReturn('');
+    #[DataProvider('apexHostProvider')]
+    public function testApexHostRedirectResponseHasMovedPermanentlyStatusAndWwwLocation(
+        string $host,
+        string $expectedLocation
+    ): void {
+        $result = $this->process('https', $host, '/', '');
 
-        $result = $this->middleware->process($this->request, $this->handler);
-
-        // The middleware creates a new response with 301 status
-        self::assertNotSame($this->response, $result);
+        self::assertSame(HttpStatus::STATUS_MOVED_PERMANENTLY, $result->getStatusCode());
+        self::assertSame($expectedLocation, $result->getHeaderLine('Location'));
     }
 
     /**
-     * @return array<string, array{host: string}>
+     * @return array<string, array{host: string, expectedLocation: string}>
      */
-    public static function apexDomainProvider(): array
+    public static function apexHostProvider(): array
     {
         return [
             'simple domain' => [
                 'host' => 'example.com',
+                'expectedLocation' => 'https://www.example.com/',
             ],
             'subdomain' => [
                 'host' => 'api.example.com',
+                'expectedLocation' => 'https://www.api.example.com/',
             ],
             'deep subdomain' => [
                 'host' => 'api.v1.example.com',
+                'expectedLocation' => 'https://www.api.v1.example.com/',
             ],
             'single word' => [
                 'host' => 'localhost',
+                'expectedLocation' => 'https://www.localhost/',
             ],
             'with numbers' => [
                 'host' => 'example123.com',
+                'expectedLocation' => 'https://www.example123.com/',
             ],
             'with hyphens' => [
                 'host' => 'my-example.com',
+                'expectedLocation' => 'https://www.my-example.com/',
             ],
         ];
     }
 
     /**
-     * Test that redirect preserves HTTPS scheme
+     * Test that the redirect location keeps the https scheme when the incoming request is served over https.
      */
-    public function testRedirectPreservesHttpsScheme(): void
+    public function testRedirectLocationPreservesHttpsSchemeWhenRequestIsHttps(): void
     {
-        $this->uri->method('getScheme')
-            ->willReturn('https');
-        $this->uri->method('getHost')
-            ->willReturn('example.com');
-        $this->uri->method('getPath')
-            ->willReturn('/test');
-        $this->uri->method('getQuery')
-            ->willReturn('');
+        $result = $this->process('https', 'example.com', '/test', '');
 
-        $result = $this->middleware->process($this->request, $this->handler);
-
-        // The middleware should create a new redirect response
-        self::assertNotSame($this->response, $result);
+        self::assertSame('https://www.example.com/test', $result->getHeaderLine('Location'));
     }
 
     /**
-     * Test that redirect preserves HTTP scheme
+     * Test that the redirect location keeps the http scheme when the incoming request is served over http.
      */
-    public function testRedirectPreservesHttpScheme(): void
+    public function testRedirectLocationPreservesHttpSchemeWhenRequestIsHttp(): void
     {
-        $this->uri->method('getScheme')
-            ->willReturn('http');
-        $this->uri->method('getHost')
-            ->willReturn('example.com');
-        $this->uri->method('getPath')
-            ->willReturn('/test');
-        $this->uri->method('getQuery')
-            ->willReturn('');
+        $result = $this->process('http', 'example.com', '/test', '');
 
-        $result = $this->middleware->process($this->request, $this->handler);
-
-        self::assertNotSame($this->response, $result);
+        self::assertSame('http://www.example.com/test', $result->getHeaderLine('Location'));
     }
 
     /**
-     * Test that redirect preserves request path
+     * Test that the redirect location preserves the request path for a range of path shapes.
      */
-    #[\PHPUnit\Framework\Attributes\DataProvider('pathProvider')]
-    public function testRedirectPreservesRequestPath(string $path): void
+    #[DataProvider('pathProvider')]
+    public function testRedirectLocationPreservesRequestPath(string $path): void
     {
-        $this->uri->method('getScheme')
-            ->willReturn('https');
-        $this->uri->method('getHost')
-            ->willReturn('example.com');
-        $this->uri->method('getPath')
-            ->willReturn($path);
-        $this->uri->method('getQuery')
-            ->willReturn('');
+        $result = $this->process('https', 'example.com', $path, '');
 
-        $result = $this->middleware->process($this->request, $this->handler);
-
-        self::assertNotSame($this->response, $result);
+        self::assertSame('https://www.example.com' . $path, $result->getHeaderLine('Location'));
     }
 
     /**
@@ -276,23 +242,14 @@ final class ApexMiddlewareTest extends TestCase
     }
 
     /**
-     * Test that redirect preserves query string
+     * Test that the redirect location appends the query string after a question mark for a range of query shapes.
      */
-    #[\PHPUnit\Framework\Attributes\DataProvider('queryStringProvider')]
-    public function testRedirectPreservesQueryString(string $query): void
+    #[DataProvider('queryStringProvider')]
+    public function testRedirectLocationAppendsQueryString(string $query): void
     {
-        $this->uri->method('getScheme')
-            ->willReturn('https');
-        $this->uri->method('getHost')
-            ->willReturn('example.com');
-        $this->uri->method('getPath')
-            ->willReturn('/search');
-        $this->uri->method('getQuery')
-            ->willReturn($query);
+        $result = $this->process('https', 'example.com', '/search', $query);
 
-        $result = $this->middleware->process($this->request, $this->handler);
-
-        self::assertNotSame($this->response, $result);
+        self::assertSame('https://www.example.com/search?' . $query, $result->getHeaderLine('Location'));
     }
 
     /**
@@ -323,346 +280,234 @@ final class ApexMiddlewareTest extends TestCase
     }
 
     /**
-     * Test that redirect without query string has no question mark
+     * Test that the redirect location omits the question mark when the request has no query string.
      */
-    public function testRedirectWithoutQueryStringHasNoQuestionMark(): void
+    public function testRedirectLocationOmitsQuestionMarkWhenQueryStringIsEmpty(): void
     {
-        $this->uri->method('getScheme')
-            ->willReturn('https');
-        $this->uri->method('getHost')
-            ->willReturn('example.com');
-        $this->uri->method('getPath')
-            ->willReturn('/test');
-        $this->uri->method('getQuery')
-            ->willReturn('');
+        $result = $this->process('https', 'example.com', '/test', '');
 
-        $result = $this->middleware->process($this->request, $this->handler);
-
-        self::assertNotSame($this->response, $result);
+        self::assertSame('https://www.example.com/test', $result->getHeaderLine('Location'));
     }
 
     /**
-     * Test that APP_ENV with two-letter suffix creates custom prefix
+     * Test that a two-letter APP_ENV suffix produces a www-pl prefixed redirect location.
      */
-    public function testAppEnvWithTwoLetterSuffixCreatesCustomPrefix(): void
+    public function testAppEnvWithTwoLetterSuffixProducesInitialsPrefixedLocation(): void
     {
         putenv('APP_ENV=staging-pl');
 
-        $this->uri->method('getScheme')
-            ->willReturn('https');
-        $this->uri->method('getHost')
-            ->willReturn('example.com');
-        $this->uri->method('getPath')
-            ->willReturn('/');
-        $this->uri->method('getQuery')
-            ->willReturn('');
+        $result = $this->process('https', 'example.com', '/', '');
 
-        $result = $this->middleware->process($this->request, $this->handler);
-
-        self::assertNotSame($this->response, $result);
+        self::assertSame('https://www-pl.example.com/', $result->getHeaderLine('Location'));
     }
 
     /**
-     * Test that APP_ENV with two-letter suffix creates www-xx prefix
+     * Test that assorted two-letter APP_ENV suffixes each produce the matching www-initials redirect location.
      */
-    #[\PHPUnit\Framework\Attributes\DataProvider('appEnvTwoLetterProvider')]
-    public function testAppEnvWithTwoLetterSuffixCreatesWwwDashPrefix(string $appEnv, string $expectedInitials): void
-    {
+    #[DataProvider('appEnvTwoLetterProvider')]
+    public function testAppEnvWithTwoLetterSuffixProducesMatchingInitialsPrefix(
+        string $appEnv,
+        string $expectedLocation
+    ): void {
         putenv("APP_ENV={$appEnv}");
 
-        $this->uri->method('getScheme')
-            ->willReturn('https');
-        $this->uri->method('getHost')
-            ->willReturn('example.com');
-        $this->uri->method('getPath')
-            ->willReturn('/');
-        $this->uri->method('getQuery')
-            ->willReturn('');
+        $result = $this->process('https', 'example.com', '/', '');
 
-        $result = $this->middleware->process($this->request, $this->handler);
-
-        self::assertNotSame($this->response, $result);
-        // Expected location: https://www-{initials}.example.com/
+        self::assertSame($expectedLocation, $result->getHeaderLine('Location'));
     }
 
     /**
-     * @return array<string, array{appEnv: string, expectedInitials: string}>
+     * @return array<string, array{appEnv: string, expectedLocation: string}>
      */
     public static function appEnvTwoLetterProvider(): array
     {
         return [
             'staging-pl' => [
                 'appEnv' => 'staging-pl',
-                'expectedInitials' => 'pl',
+                'expectedLocation' => 'https://www-pl.example.com/',
             ],
             'staging-en' => [
                 'appEnv' => 'staging-en',
-                'expectedInitials' => 'en',
+                'expectedLocation' => 'https://www-en.example.com/',
             ],
             'prod-us' => [
                 'appEnv' => 'prod-us',
-                'expectedInitials' => 'us',
+                'expectedLocation' => 'https://www-us.example.com/',
             ],
             'dev-fr' => [
                 'appEnv' => 'dev-fr',
-                'expectedInitials' => 'fr',
+                'expectedLocation' => 'https://www-fr.example.com/',
             ],
         ];
     }
 
     /**
-     * Test that APP_ENV without dash uses default www prefix
+     * Test that a two-letter APP_ENV suffix surrounded by whitespace is trimmed before building the initials prefix.
      */
-    public function testAppEnvWithoutDashUsesDefaultWwwPrefix(): void
-    {
-        putenv('APP_ENV=production');
-
-        $this->uri->method('getScheme')
-            ->willReturn('https');
-        $this->uri->method('getHost')
-            ->willReturn('example.com');
-        $this->uri->method('getPath')
-            ->willReturn('/');
-        $this->uri->method('getQuery')
-            ->willReturn('');
-
-        $result = $this->middleware->process($this->request, $this->handler);
-
-        self::assertNotSame($this->response, $result);
-    }
-
-    /**
-     * Test that APP_ENV with multiple dashes uses default www prefix
-     */
-    public function testAppEnvWithMultipleDashesUsesDefaultWwwPrefix(): void
-    {
-        putenv('APP_ENV=staging-dev-pl');
-
-        $this->uri->method('getScheme')
-            ->willReturn('https');
-        $this->uri->method('getHost')
-            ->willReturn('example.com');
-        $this->uri->method('getPath')
-            ->willReturn('/');
-        $this->uri->method('getQuery')
-            ->willReturn('');
-
-        $result = $this->middleware->process($this->request, $this->handler);
-
-        self::assertNotSame($this->response, $result);
-    }
-
-    /**
-     * Test that APP_ENV with one-letter suffix uses default www prefix
-     */
-    public function testAppEnvWithOneLetterSuffixUsesDefaultWwwPrefix(): void
-    {
-        putenv('APP_ENV=staging-p');
-
-        $this->uri->method('getScheme')
-            ->willReturn('https');
-        $this->uri->method('getHost')
-            ->willReturn('example.com');
-        $this->uri->method('getPath')
-            ->willReturn('/');
-        $this->uri->method('getQuery')
-            ->willReturn('');
-
-        $result = $this->middleware->process($this->request, $this->handler);
-
-        self::assertNotSame($this->response, $result);
-    }
-
-    /**
-     * Test that APP_ENV with three-letter suffix uses default www prefix
-     */
-    public function testAppEnvWithThreeLetterSuffixUsesDefaultWwwPrefix(): void
-    {
-        putenv('APP_ENV=staging-pol');
-
-        $this->uri->method('getScheme')
-            ->willReturn('https');
-        $this->uri->method('getHost')
-            ->willReturn('example.com');
-        $this->uri->method('getPath')
-            ->willReturn('/');
-        $this->uri->method('getQuery')
-            ->willReturn('');
-
-        $result = $this->middleware->process($this->request, $this->handler);
-
-        self::assertNotSame($this->response, $result);
-    }
-
-    /**
-     * Test that empty APP_ENV uses default www prefix
-     */
-    public function testEmptyAppEnvUsesDefaultWwwPrefix(): void
-    {
-        putenv('APP_ENV=');
-
-        $this->uri->method('getScheme')
-            ->willReturn('https');
-        $this->uri->method('getHost')
-            ->willReturn('example.com');
-        $this->uri->method('getPath')
-            ->willReturn('/');
-        $this->uri->method('getQuery')
-            ->willReturn('');
-
-        $result = $this->middleware->process($this->request, $this->handler);
-
-        self::assertNotSame($this->response, $result);
-    }
-
-    /**
-     * Test that APP_ENV with spaces is trimmed
-     */
-    public function testAppEnvWithSpacesIsTrimmed(): void
+    public function testAppEnvWithSurroundingWhitespaceIsTrimmedBeforeBuildingPrefix(): void
     {
         putenv('APP_ENV=  staging-pl  ');
 
-        $this->uri->method('getScheme')
-            ->willReturn('https');
-        $this->uri->method('getHost')
-            ->willReturn('example.com');
-        $this->uri->method('getPath')
-            ->willReturn('/');
-        $this->uri->method('getQuery')
-            ->willReturn('');
+        $result = $this->process('https', 'example.com', '/', '');
 
-        $result = $this->middleware->process($this->request, $this->handler);
-
-        self::assertNotSame($this->response, $result);
+        self::assertSame('https://www-pl.example.com/', $result->getHeaderLine('Location'));
     }
 
     /**
-     * Test that false APP_ENV value uses default www prefix
+     * Test that an APP_ENV value without a dash falls back to the default www prefix.
      */
-    public function testFalseAppEnvValueUsesDefaultWwwPrefix(): void
+    public function testAppEnvWithoutDashFallsBackToDefaultWwwPrefix(): void
+    {
+        putenv('APP_ENV=production');
+
+        $result = $this->process('https', 'example.com', '/', '');
+
+        self::assertSame('https://www.example.com/', $result->getHeaderLine('Location'));
+    }
+
+    /**
+     * Test that an APP_ENV value with more than one dash falls back to the default www prefix.
+     */
+    public function testAppEnvWithMultipleDashesFallsBackToDefaultWwwPrefix(): void
+    {
+        putenv('APP_ENV=staging-dev-pl');
+
+        $result = $this->process('https', 'example.com', '/', '');
+
+        self::assertSame('https://www.example.com/', $result->getHeaderLine('Location'));
+    }
+
+    /**
+     * Test that an APP_ENV value with a one-letter suffix falls back to the default www prefix.
+     */
+    public function testAppEnvWithOneLetterSuffixFallsBackToDefaultWwwPrefix(): void
+    {
+        putenv('APP_ENV=staging-p');
+
+        $result = $this->process('https', 'example.com', '/', '');
+
+        self::assertSame('https://www.example.com/', $result->getHeaderLine('Location'));
+    }
+
+    /**
+     * Test that an APP_ENV value with a three-letter suffix falls back to the default www prefix.
+     */
+    public function testAppEnvWithThreeLetterSuffixFallsBackToDefaultWwwPrefix(): void
+    {
+        putenv('APP_ENV=staging-pol');
+
+        $result = $this->process('https', 'example.com', '/', '');
+
+        self::assertSame('https://www.example.com/', $result->getHeaderLine('Location'));
+    }
+
+    /**
+     * Test that an empty APP_ENV value falls back to the default www prefix.
+     */
+    public function testEmptyAppEnvFallsBackToDefaultWwwPrefix(): void
+    {
+        putenv('APP_ENV=');
+
+        $result = $this->process('https', 'example.com', '/', '');
+
+        self::assertSame('https://www.example.com/', $result->getHeaderLine('Location'));
+    }
+
+    /**
+     * Test that an unset APP_ENV variable falls back to the default www prefix.
+     */
+    public function testUnsetAppEnvFallsBackToDefaultWwwPrefix(): void
     {
         putenv('APP_ENV');  // Unset the variable
 
-        $this->uri->method('getScheme')
-            ->willReturn('https');
-        $this->uri->method('getHost')
-            ->willReturn('example.com');
-        $this->uri->method('getPath')
-            ->willReturn('/');
-        $this->uri->method('getQuery')
-            ->willReturn('');
+        $result = $this->process('https', 'example.com', '/', '');
 
-        $result = $this->middleware->process($this->request, $this->handler);
-
-        self::assertNotSame($this->response, $result);
+        self::assertSame('https://www.example.com/', $result->getHeaderLine('Location'));
     }
 
     /**
-     * Test that www-xxx prefix (three letters) is not recognized and gets redirected
+     * Test that an APP_ENV value whose dash is at the end falls back to the default www prefix.
      */
-    public function testWwwDashThreeLetterPrefixGetsRedirected(): void
+    public function testAppEnvWithTrailingDashFallsBackToDefaultWwwPrefix(): void
     {
-        $this->uri->method('getScheme')
-            ->willReturn('https');
-        $this->uri->method('getHost')
-            ->willReturn('www-abc.example.com');
-        $this->uri->method('getPath')
-            ->willReturn('/');
-        $this->uri->method('getQuery')
-            ->willReturn('');
+        putenv('APP_ENV=staging-');
 
-        $result = $this->middleware->process($this->request, $this->handler);
+        $result = $this->process('https', 'example.com', '/', '');
 
-        self::assertNotSame($this->response, $result);
+        self::assertSame('https://www.example.com/', $result->getHeaderLine('Location'));
     }
 
     /**
-     * Test that www-x prefix (one letter) is not recognized and gets redirected
+     * Test that an APP_ENV value with a leading dash and two-letter suffix still produces the initials prefix.
      */
-    public function testWwwDashOneLetterPrefixGetsRedirected(): void
+    public function testAppEnvWithLeadingDashStillProducesInitialsPrefix(): void
     {
-        $this->uri->method('getScheme')
-            ->willReturn('https');
-        $this->uri->method('getHost')
-            ->willReturn('www-a.example.com');
-        $this->uri->method('getPath')
-            ->willReturn('/');
-        $this->uri->method('getQuery')
-            ->willReturn('');
+        putenv('APP_ENV=-pl');
 
-        $result = $this->middleware->process($this->request, $this->handler);
+        $result = $this->process('https', 'example.com', '/', '');
 
-        self::assertNotSame($this->response, $result);
+        self::assertSame('https://www-pl.example.com/', $result->getHeaderLine('Location'));
     }
 
     /**
-     * Test that subdomain starting with www but not matching pattern gets redirected
+     * Test that an APP_ENV value consisting of only a dash falls back to the default www prefix.
      */
-    public function testSubdomainStartingWithWwwButNotMatchingPatternGetsRedirected(): void
+    public function testAppEnvWithOnlyDashFallsBackToDefaultWwwPrefix(): void
     {
-        $this->uri->method('getScheme')
-            ->willReturn('https');
-        $this->uri->method('getHost')
-            ->willReturn('wwwtest.example.com');
-        $this->uri->method('getPath')
-            ->willReturn('/');
-        $this->uri->method('getQuery')
-            ->willReturn('');
+        putenv('APP_ENV=-');
 
-        $result = $this->middleware->process($this->request, $this->handler);
+        $result = $this->process('https', 'example.com', '/', '');
 
-        self::assertNotSame($this->response, $result);
+        self::assertSame('https://www.example.com/', $result->getHeaderLine('Location'));
     }
 
     /**
-     * Test that complex scenario with path and query is handled correctly
+     * Test that a www-abc three-letter prefix is not recognized and the host is redirected to www.
      */
-    public function testComplexScenarioWithPathAndQueryIsHandledCorrectly(): void
+    public function testHostWithWwwDashThreeLetterPrefixIsRedirectedToWww(): void
     {
-        $this->uri->method('getScheme')
-            ->willReturn('https');
-        $this->uri->method('getHost')
-            ->willReturn('example.com');
-        $this->uri->method('getPath')
-            ->willReturn('/blog/post/123');
-        $this->uri->method('getQuery')
-            ->willReturn('ref=twitter&utm_source=social');
+        $result = $this->process('https', 'www-abc.example.com', '/', '');
 
-        $result = $this->middleware->process($this->request, $this->handler);
-
-        self::assertNotSame($this->response, $result);
+        self::assertSame('https://www.www-abc.example.com/', $result->getHeaderLine('Location'));
     }
 
     /**
-     * Test that uppercase WWW-XX prefix is recognized
+     * Test that a www-a one-letter prefix is not recognized and the host is redirected to www.
      */
-    public function testUppercaseWwwDashTwoLetterPrefixIsRecognized(): void
+    public function testHostWithWwwDashOneLetterPrefixIsRedirectedToWww(): void
     {
-        $this->uri->method('getHost')
-            ->willReturn('WWW-PL.example.com');
+        $result = $this->process('https', 'www-a.example.com', '/', '');
 
-        $result = $this->middleware->process($this->request, $this->handler);
-
-        self::assertSame($this->response, $result);
+        self::assertSame('https://www.www-a.example.com/', $result->getHeaderLine('Location'));
     }
 
     /**
-     * Test that mixed case Www-Xx prefix is recognized
+     * Test that a host starting with www but lacking the dot delimiter is not recognized and is redirected to www.
      */
-    public function testMixedCaseWwwDashTwoLetterPrefixIsRecognized(): void
+    public function testHostStartingWithWwwButLackingDelimiterIsRedirectedToWww(): void
     {
-        $this->uri->method('getHost')
-            ->willReturn('WwW-Pl.example.com');
+        $result = $this->process('https', 'wwwtest.example.com', '/', '');
 
-        $result = $this->middleware->process($this->request, $this->handler);
-
-        self::assertSame($this->response, $result);
+        self::assertSame('https://www.wwwtest.example.com/', $result->getHeaderLine('Location'));
     }
 
     /**
-     * Test that middleware processes request through handler
+     * Test that the redirect location preserves both the path and the query string when both are present.
      */
-    public function testMiddlewareProcessesRequestThroughHandler(): void
+    public function testRedirectLocationPreservesBothPathAndQueryString(): void
+    {
+        $result = $this->process('https', 'example.com', '/blog/post/123', 'ref=twitter&utm_source=social');
+
+        self::assertSame(
+            'https://www.example.com/blog/post/123?ref=twitter&utm_source=social',
+            $result->getHeaderLine('Location')
+        );
+    }
+
+    /**
+     * Test that the handler is invoked exactly once with the incoming request when the host already has the www prefix.
+     */
+    public function testHandlerIsInvokedWithRequestWhenHostAlreadyHasWwwPrefix(): void
     {
         $this->uri->method('getHost')
             ->willReturn('www.example.com');
@@ -673,29 +518,16 @@ final class ApexMiddlewareTest extends TestCase
             ->with($this->request)
             ->willReturn($this->response);
 
-        $this->middleware->process($this->request, $handler);
-    }
-
-    /**
-     * Test that response is modified only for apex domains
-     */
-    public function testResponseIsModifiedOnlyForApexDomains(): void
-    {
-        $this->uri->method('getHost')
-            ->willReturn('www.example.com');
-
-        $result = $this->middleware->process($this->request, $this->handler);
+        $result = $this->middleware->process($this->request, $handler);
 
         self::assertSame($this->response, $result);
     }
 
     /**
-     * Test that APP_ENV with dash at end uses default prefix
+     * Test that the handler is still invoked with the request even when the apex host triggers a redirect.
      */
-    public function testAppEnvWithDashAtEndUsesDefaultPrefix(): void
+    public function testHandlerIsStillInvokedWhenApexHostTriggersRedirect(): void
     {
-        putenv('APP_ENV=staging-');
-
         $this->uri->method('getScheme')
             ->willReturn('https');
         $this->uri->method('getHost')
@@ -705,50 +537,28 @@ final class ApexMiddlewareTest extends TestCase
         $this->uri->method('getQuery')
             ->willReturn('');
 
-        $result = $this->middleware->process($this->request, $this->handler);
+        $handler = $this->createMock(RequestHandlerInterface::class);
+        $handler->expects(self::once())
+            ->method('handle')
+            ->with($this->request)
+            ->willReturn($this->response);
 
-        self::assertNotSame($this->response, $result);
+        $result = $this->middleware->process($this->request, $handler);
+
+        self::assertSame(HttpStatus::STATUS_MOVED_PERMANENTLY, $result->getStatusCode());
     }
 
-    /**
-     * Test that APP_ENV with dash at start uses default prefix
-     */
-    public function testAppEnvWithDashAtStartUsesDefaultPrefix(): void
+    private function process(string $scheme, string $host, string $path, string $query): ResponseInterface
     {
-        putenv('APP_ENV=-pl');
-
         $this->uri->method('getScheme')
-            ->willReturn('https');
+            ->willReturn($scheme);
         $this->uri->method('getHost')
-            ->willReturn('example.com');
+            ->willReturn($host);
         $this->uri->method('getPath')
-            ->willReturn('/');
+            ->willReturn($path);
         $this->uri->method('getQuery')
-            ->willReturn('');
+            ->willReturn($query);
 
-        $result = $this->middleware->process($this->request, $this->handler);
-
-        self::assertNotSame($this->response, $result);
-    }
-
-    /**
-     * Test that APP_ENV with only dash uses default prefix
-     */
-    public function testAppEnvWithOnlyDashUsesDefaultPrefix(): void
-    {
-        putenv('APP_ENV=-');
-
-        $this->uri->method('getScheme')
-            ->willReturn('https');
-        $this->uri->method('getHost')
-            ->willReturn('example.com');
-        $this->uri->method('getPath')
-            ->willReturn('/');
-        $this->uri->method('getQuery')
-            ->willReturn('');
-
-        $result = $this->middleware->process($this->request, $this->handler);
-
-        self::assertNotSame($this->response, $result);
+        return $this->middleware->process($this->request, $this->handler);
     }
 }

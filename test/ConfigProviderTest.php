@@ -20,20 +20,19 @@ final class ConfigProviderTest extends TestCase
     }
 
     /**
-     * Test that invoke returns expected configuration array structure
+     * Test that __invoke returns an array containing the dependencies key when the provider is invoked.
      */
-    public function testInvokeReturnsConfigurationArray(): void
+    public function testInvokeReturnsConfigurationArrayWithDependenciesKey(): void
     {
         $config = ($this->provider)();
 
-        self::assertIsArray($config);
         self::assertArrayHasKey('dependencies', $config);
     }
 
     /**
-     * Test that invoke returns dependencies configuration
+     * Test that __invoke nests a factories array under dependencies when the provider is invoked.
      */
-    public function testInvokeReturnsDependenciesConfiguration(): void
+    public function testInvokeReturnsDependenciesConfigurationWithFactoriesKey(): void
     {
         $config = ($this->provider)();
 
@@ -42,20 +41,19 @@ final class ConfigProviderTest extends TestCase
     }
 
     /**
-     * Test that getDependencies returns expected structure
+     * Test that getDependencies returns an array exposing a factories key when called directly.
      */
-    public function testGetDependenciesReturnsExpectedStructure(): void
+    public function testGetDependenciesReturnsArrayWithFactoriesKey(): void
     {
         $dependencies = $this->provider->getDependencies();
 
-        self::assertIsArray($dependencies);
         self::assertArrayHasKey('factories', $dependencies);
     }
 
     /**
-     * Test that factories contains ApexMiddleware mapping
+     * Test that the factories map wires ApexMiddleware to its factory when dependencies are retrieved.
      */
-    public function testFactoriesContainApexMiddlewareMapping(): void
+    public function testFactoriesMapApexMiddlewareToApexMiddlewareFactory(): void
     {
         $dependencies = $this->provider->getDependencies();
         $factories = $dependencies['factories'];
@@ -65,9 +63,9 @@ final class ConfigProviderTest extends TestCase
     }
 
     /**
-     * Test that invoke method calls getDependencies internally
+     * Test that __invoke delegates to getDependencies when building the dependencies section.
      */
-    public function testInvokeCallsGetDependencies(): void
+    public function testInvokeReusesGetDependenciesResultForDependenciesSection(): void
     {
         $expectedDependencies = $this->provider->getDependencies();
         $config = ($this->provider)();
@@ -76,9 +74,9 @@ final class ConfigProviderTest extends TestCase
     }
 
     /**
-     * Test that configuration array contains only expected keys
+     * Test that the configuration array holds only the dependencies key when the provider is invoked.
      */
-    public function testConfigurationArrayContainsOnlyExpectedKeys(): void
+    public function testConfigurationArrayContainsOnlyDependenciesKey(): void
     {
         $config = ($this->provider)();
 
@@ -87,9 +85,9 @@ final class ConfigProviderTest extends TestCase
     }
 
     /**
-     * Test that dependencies array contains only expected keys
+     * Test that the dependencies array holds only the factories key when dependencies are retrieved.
      */
-    public function testDependenciesArrayContainsOnlyExpectedKeys(): void
+    public function testDependenciesArrayContainsOnlyFactoriesKey(): void
     {
         $dependencies = $this->provider->getDependencies();
 
@@ -98,7 +96,7 @@ final class ConfigProviderTest extends TestCase
     }
 
     /**
-     * Test that factories array contains only ApexMiddleware entry
+     * Test that the factories array holds only the ApexMiddleware entry when dependencies are retrieved.
      */
     public function testFactoriesArrayContainsOnlyApexMiddlewareEntry(): void
     {
@@ -110,9 +108,9 @@ final class ConfigProviderTest extends TestCase
     }
 
     /**
-     * Test that multiple invocations return consistent results
+     * Test that __invoke returns identical configuration when called multiple times.
      */
-    public function testMultipleInvocationsReturnConsistentResults(): void
+    public function testMultipleInvocationsReturnIdenticalConfiguration(): void
     {
         $firstCall = ($this->provider)();
         $secondCall = ($this->provider)();
@@ -121,9 +119,9 @@ final class ConfigProviderTest extends TestCase
     }
 
     /**
-     * Test that multiple getDependencies calls return consistent results
+     * Test that getDependencies returns identical dependencies when called multiple times.
      */
-    public function testMultipleGetDependenciesCallsReturnConsistentResults(): void
+    public function testMultipleGetDependenciesCallsReturnIdenticalDependencies(): void
     {
         $firstCall = $this->provider->getDependencies();
         $secondCall = $this->provider->getDependencies();

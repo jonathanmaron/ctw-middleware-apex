@@ -15,7 +15,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 final class AbstractApexMiddlewareTest extends TestCase
 {
     /**
-     * Test that AbstractApexMiddleware extends AbstractMiddleware
+     * Test that AbstractApexMiddleware reports as both abstract and a subclass of AbstractMiddleware when reflected.
      */
     public function testAbstractApexMiddlewareExtendsAbstractMiddleware(): void
     {
@@ -26,7 +26,7 @@ final class AbstractApexMiddlewareTest extends TestCase
     }
 
     /**
-     * Test that AbstractApexMiddleware is abstract
+     * Test that AbstractApexMiddleware is declared abstract when reflected.
      */
     public function testAbstractApexMiddlewareIsAbstract(): void
     {
@@ -36,7 +36,7 @@ final class AbstractApexMiddlewareTest extends TestCase
     }
 
     /**
-     * Test that AbstractApexMiddleware implements MiddlewareInterface
+     * Test that AbstractApexMiddleware implements the PSR-15 MiddlewareInterface when reflected.
      */
     public function testAbstractApexMiddlewareImplementsMiddlewareInterface(): void
     {
@@ -46,7 +46,7 @@ final class AbstractApexMiddlewareTest extends TestCase
     }
 
     /**
-     * Test that concrete implementation can be instantiated
+     * Test that a concrete subclass is an instance of the whole middleware hierarchy when instantiated.
      */
     public function testConcreteImplementationCanBeInstantiated(): void
     {
@@ -65,7 +65,7 @@ final class AbstractApexMiddlewareTest extends TestCase
     }
 
     /**
-     * Test that concrete implementation has process method
+     * Test that a concrete subclass exposes a process method when instantiated.
      */
     public function testConcreteImplementationHasProcessMethod(): void
     {
@@ -82,7 +82,7 @@ final class AbstractApexMiddlewareTest extends TestCase
     }
 
     /**
-     * Test that concrete implementation can process requests
+     * Test that a concrete subclass returns the handler response when its process method delegates to the handler.
      */
     public function testConcreteImplementationCanProcessRequests(): void
     {
@@ -110,7 +110,7 @@ final class AbstractApexMiddlewareTest extends TestCase
     }
 
     /**
-     * Test that AbstractApexMiddleware has no public methods besides inherited ones
+     * Test that AbstractApexMiddleware declares no public methods of its own when inherited methods are excluded.
      */
     public function testAbstractApexMiddlewareHasNoPublicMethods(): void
     {
@@ -127,7 +127,7 @@ final class AbstractApexMiddlewareTest extends TestCase
     }
 
     /**
-     * Test that AbstractApexMiddleware has no properties
+     * Test that AbstractApexMiddleware declares no properties of its own when inherited properties are excluded.
      */
     public function testAbstractApexMiddlewareHasNoProperties(): void
     {
@@ -144,7 +144,7 @@ final class AbstractApexMiddlewareTest extends TestCase
     }
 
     /**
-     * Test that AbstractApexMiddleware namespace is correct
+     * Test that AbstractApexMiddleware resides in the ApexMiddleware namespace when reflected.
      */
     public function testAbstractApexMiddlewareNamespaceIsCorrect(): void
     {
@@ -154,7 +154,7 @@ final class AbstractApexMiddlewareTest extends TestCase
     }
 
     /**
-     * Test that AbstractApexMiddleware is a class
+     * Test that AbstractApexMiddleware is a class rather than an interface or trait when reflected.
      */
     public function testAbstractApexMiddlewareIsClass(): void
     {
@@ -165,7 +165,7 @@ final class AbstractApexMiddlewareTest extends TestCase
     }
 
     /**
-     * Test that multiple concrete implementations are independent
+     * Test that two concrete subclasses are distinct instances when instantiated separately.
      */
     public function testMultipleConcreteImplementationsAreIndependent(): void
     {

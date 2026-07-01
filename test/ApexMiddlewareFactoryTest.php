@@ -23,7 +23,7 @@ final class ApexMiddlewareFactoryTest extends TestCase
     }
 
     /**
-     * Test that factory creates ApexMiddleware instance
+     * Test that the factory returns an ApexMiddleware instance when invoked with a container.
      */
     public function testFactoryCreatesApexMiddlewareInstance(): void
     {
@@ -33,7 +33,7 @@ final class ApexMiddlewareFactoryTest extends TestCase
     }
 
     /**
-     * Test that factory returns new instance on each invocation
+     * Test that the factory returns a distinct instance when invoked more than once.
      */
     public function testFactoryReturnsNewInstanceOnEachInvocation(): void
     {
@@ -44,7 +44,7 @@ final class ApexMiddlewareFactoryTest extends TestCase
     }
 
     /**
-     * Test that factory creates instance without container dependencies
+     * Test that the factory never resolves any service from the container when creating the middleware.
      */
     public function testFactoryCreatesInstanceWithoutContainerDependencies(): void
     {
@@ -59,7 +59,7 @@ final class ApexMiddlewareFactoryTest extends TestCase
     }
 
     /**
-     * Test that factory works with different container implementations
+     * Test that the factory produces an ApexMiddleware when invoked with any container implementation.
      */
     public function testFactoryWorksWithDifferentContainerImplementations(): void
     {
@@ -71,7 +71,7 @@ final class ApexMiddlewareFactoryTest extends TestCase
     }
 
     /**
-     * Test that multiple factory instances create independent middlewares
+     * Test that two separate factory objects produce distinct middleware instances when each is invoked.
      */
     public function testMultipleFactoryInstancesCreateIndependentMiddlewares(): void
     {
@@ -84,7 +84,7 @@ final class ApexMiddlewareFactoryTest extends TestCase
     }
 
     /**
-     * Test that factory is invokable
+     * Test that the factory object is callable when treated as an invokable.
      */
     public function testFactoryIsInvokable(): void
     {
@@ -92,7 +92,7 @@ final class ApexMiddlewareFactoryTest extends TestCase
     }
 
     /**
-     * Test that created middleware is callable as PSR-15 middleware
+     * Test that the created middleware exposes the PSR-15 process method when built by the factory.
      */
     public function testCreatedMiddlewareIsCallableAsPsr15Middleware(): void
     {
