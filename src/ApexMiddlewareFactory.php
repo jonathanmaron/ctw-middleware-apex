@@ -7,6 +7,7 @@ use Psr\Container\ContainerInterface;
 
 class ApexMiddlewareFactory
 {
+    #[\NoDiscard('The created middleware instance must be used.')]
     public function __invoke(ContainerInterface $container): ApexMiddleware
     {
         return new ApexMiddleware();

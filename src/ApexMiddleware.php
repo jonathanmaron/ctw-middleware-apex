@@ -13,6 +13,7 @@ class ApexMiddleware extends AbstractApexMiddleware
 {
     private const string HEADER = 'Location';
 
+    #[\NoDiscard('The returned response carries the redirect and must be sent to the client.')]
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         $response = $handler->handle($request);
@@ -37,7 +38,7 @@ class ApexMiddleware extends AbstractApexMiddleware
         $separator = '-';
         if (1 === substr_count($appEnv, $separator)) {
             $parts    = explode($separator, $appEnv);
-            $initials = array_pop($parts);
+            $initials = array_last($parts);
             if (2 === strlen($initials)) {
                 $prefix = sprintf('www-%s.', $initials);
             }
