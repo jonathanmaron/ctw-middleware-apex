@@ -548,6 +548,18 @@ final class ApexMiddlewareTest extends TestCase
         self::assertSame(HttpStatus::STATUS_MOVED_PERMANENTLY, $result->getStatusCode());
     }
 
+    /**
+     * Test that process() carries the #[\NoDiscard] attribute so callers are warned when the redirect response is ignored.
+     */
+    public function testProcessMethodIsMarkedNoDiscardToWarnWhenResponseIsIgnored(): void
+    {
+        $reflection = new \ReflectionMethod(ApexMiddleware::class, 'process');
+        $attributes = $reflection->getAttributes(\NoDiscard::class);
+
+        self::assertCount(1, $attributes);
+        self::assertInstanceOf(\NoDiscard::class, $attributes[0]->newInstance());
+    }
+
     private function process(string $scheme, string $host, string $path, string $query): ResponseInterface
     {
         $this->uri->method('getScheme')

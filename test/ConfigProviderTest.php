@@ -128,4 +128,28 @@ final class ConfigProviderTest extends TestCase
 
         self::assertSame($firstCall, $secondCall);
     }
+
+    /**
+     * Test that __invoke() carries the #[\NoDiscard] attribute so callers are warned when the configuration array is ignored.
+     */
+    public function testInvokeMethodIsMarkedNoDiscardToWarnWhenConfigurationIsIgnored(): void
+    {
+        $reflection = new \ReflectionMethod(ConfigProvider::class, '__invoke');
+        $attributes = $reflection->getAttributes(\NoDiscard::class);
+
+        self::assertCount(1, $attributes);
+        self::assertInstanceOf(\NoDiscard::class, $attributes[0]->newInstance());
+    }
+
+    /**
+     * Test that getDependencies() carries the #[\NoDiscard] attribute so callers are warned when the dependencies array is ignored.
+     */
+    public function testGetDependenciesMethodIsMarkedNoDiscardToWarnWhenDependenciesAreIgnored(): void
+    {
+        $reflection = new \ReflectionMethod(ConfigProvider::class, 'getDependencies');
+        $attributes = $reflection->getAttributes(\NoDiscard::class);
+
+        self::assertCount(1, $attributes);
+        self::assertInstanceOf(\NoDiscard::class, $attributes[0]->newInstance());
+    }
 }

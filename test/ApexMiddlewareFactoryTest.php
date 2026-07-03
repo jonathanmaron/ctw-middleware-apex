@@ -100,4 +100,16 @@ final class ApexMiddlewareFactoryTest extends TestCase
 
         self::assertTrue(method_exists($middleware, 'process'));
     }
+
+    /**
+     * Test that __invoke() carries the #[\NoDiscard] attribute so callers are warned when the created middleware is ignored.
+     */
+    public function testInvokeMethodIsMarkedNoDiscardToWarnWhenCreatedMiddlewareIsIgnored(): void
+    {
+        $reflection = new \ReflectionMethod(ApexMiddlewareFactory::class, '__invoke');
+        $attributes = $reflection->getAttributes(\NoDiscard::class);
+
+        self::assertCount(1, $attributes);
+        self::assertInstanceOf(\NoDiscard::class, $attributes[0]->newInstance());
+    }
 }
