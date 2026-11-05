@@ -14,6 +14,7 @@
     },
     "require-dev": {
         "ctw/ctw-qa": "^6.0",
+        "ergebnis/composer-normalize": "^2.56",
         "laminas/laminas-diactoros": "^3.0",
         "phpunit/phpunit": "^13.3",
         "psr/http-server-middleware": "^1.0",
@@ -33,6 +34,7 @@
     },
     "config": {
         "allow-plugins": {
+            "ergebnis/composer-normalize": true,
             "phpstan/extension-installer": true
         },
         "sort-packages": true
@@ -50,6 +52,7 @@
             "@phpstan"
         ],
         "qa-fix": [
+            "@composer normalize",
             "@composer-dependency-analyser",
             "@rector-fix",
             "@ecs-fix",
